@@ -14,7 +14,7 @@ function CommentManagement({
   initialData: Awaited<ReturnType<(typeof serverApi)["post"]["getAll"]>>;
 }) {
   const router = useRouter();
-  const { data, isLoading, isError } = clientApi.post.getAll.useQuery(
+  const { data, isLoading, isError, refetch } = clientApi.post.getAll.useQuery(
     undefined,
     {
       initialData,
@@ -23,6 +23,7 @@ function CommentManagement({
       refetchOnWindowFocus: true,
     },
   );
+  void refetch();
 
   if (isLoading) {
     return <div>Loading...</div>;
@@ -41,7 +42,8 @@ function CommentManagement({
             <CardHeader>
               <CardTitle className="text-lg font-bold">{card.title}</CardTitle>
             </CardHeader>
-            <CardContent className="flex justify-end p-4">
+            <CardContent className="flex items-center justify-between p-4">
+              <CommentCount postId={card.id} />
               <Button
                 variant="ghost"
                 onClick={() => router.push(`/commetsView?id=${card.id}`)}
@@ -55,5 +57,20 @@ function CommentManagement({
     </div>
   );
 }
+
+const CommentCount = ({ postId }: { postId: string }) => {
+  const { data, isLoading, isError } =
+    clientApi.comment.getCommentsByPostId.useQuery({ postId });
+
+  if (isLoading) {
+    return <span>Loading...</span>;
+  }
+
+  if (isError || !data) {
+    return <span>Error</span>;
+  }
+
+  return <span>{data.length} comments</span>;
+};
 
 export default CommentManagement;

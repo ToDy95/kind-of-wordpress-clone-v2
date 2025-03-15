@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { useSession } from "next-auth/react";
 import { DeletePostModal } from "@/app/_components/delete-post";
 import { Button } from "@/components/ui/button";
 import { Card, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,6 +15,8 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { type serverApi } from "@/trpc/server";
+import { Role } from "@prisma/client";
+import { useToast } from "@/hooks/use-toast";
 
 //GET ALL POSTS
 
@@ -30,11 +33,13 @@ function DashboardCard({
   const deletePost = clientApi.post.deletePost.useMutation();
   // update status of post to published or not
   const publishPost = clientApi.post.publishPost.useMutation();
-  // const unpublishPost = clientApi.post.unpublishPost.useMutation();
+  const unpublishPost = clientApi.post.unpublishPost.useMutation();
   //approved post BY: name
   const approvePost = clientApi.post.approvePost.useMutation();
 
   const router = useRouter();
+  const { data: session } = useSession();
+  const { toast } = useToast();
 
   if (isLoading) {
     return <div>Loading...</div>;
@@ -46,6 +51,13 @@ function DashboardCard({
 
   const handleDelete = async (postId: string) => {
     try {
+      if (session?.user.role !== Role.ADMIN) {
+        toast({
+          description: "You Must Be An Admin To Delete A Post",
+          variant: "destructive",
+        });
+        return;
+      }
       await deletePost.mutateAsync({ id: postId });
       await refetch();
     } catch (error) {
@@ -55,10 +67,26 @@ function DashboardCard({
 
   const handlePublishToggle = async (postId: string, published: boolean) => {
     try {
+      if (session?.user.role !== Role.ADMIN) {
+        toast({
+          description: "You Must Be An Admin To Publish Or Unpublish A Post",
+          variant: "destructive",
+        });
+        return;
+      }
+
       if (published) {
-        // await unpublishPost.mutateAsync({ id: postId });
+        await unpublishPost.mutateAsync({ id: postId });
+        toast({
+          description: "Post has been unpublished",
+          variant: "warning",
+        });
       } else {
         await publishPost.mutateAsync({ id: postId });
+        toast({
+          description: "Post has been published",
+          variant: "success",
+        });
       }
       await refetch();
     } catch (error) {
@@ -73,6 +101,13 @@ function DashboardCard({
     } catch (error) {
       console.error("Error approving post:", error);
     }
+  };
+
+  const handleUnauthorizedClick = () => {
+    toast({
+      description: "You Must Be An Admin To Perform This Action",
+      variant: "destructive",
+    });
   };
 
   return (
@@ -117,17 +152,23 @@ function DashboardCard({
                   >
                     Approve
                   </Button>
+                  {session?.user.role === Role.ADMIN ? (
+                    <Button
+                      variant="ghost"
+                      onClick={() =>
+                        handlePublishToggle(card.id, card.published)
+                      }
+                    >
+                      {card.published ? "Unpublish" : "Publish"}
+                    </Button>
+                  ) : (
+                    <Button variant="ghost" onClick={handleUnauthorizedClick}>
+                      {card.published ? "Unpublish" : "Publish"}
+                    </Button>
+                  )}
                   <Button
                     variant="ghost"
-                    onClick={() => handlePublishToggle(card.id, card.published)}
-                  >
-                    {card.published ? "Unpublish" : "Publish"}
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    onClick={
-                      () => router.push(`/dashboard/comment?id=${card.id}`) // FIX FOR LATER THE ROUTE
-                    }
+                    onClick={() => router.push(`/commetsView?id=${card.id}`)}
                   >
                     Comment
                   </Button>
