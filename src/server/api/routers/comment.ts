@@ -21,12 +21,7 @@ export const commentRouter = createTRPCRouter({
         input,
         "=======================input comm=========================",
       );
-      const post = await ctx.db.post.findUnique({
-        where: { id: input.postId },
-      });
-      if (!post) {
-        throw new Error("Post does not exist");
-      }
+
       return ctx.db.comment.create({
         data: {
           name: input.name,
@@ -74,7 +69,7 @@ export const commentRouter = createTRPCRouter({
       });
     }),
   // APPROVE COMMENT
-  approve: protectedProcedure
+  approveComment: protectedProcedure
     .input(z.object({ id: z.string().uuid() }))
     .mutation(async ({ ctx, input }) => {
       const comment = await ctx.db.comment.findUnique({

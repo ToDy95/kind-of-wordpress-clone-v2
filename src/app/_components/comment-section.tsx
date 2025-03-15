@@ -100,8 +100,8 @@ const CommentsSection = ({ postId }: { postId: string }) => {
 
   const createComment = clientApi.comment.create.useMutation({
     onSuccess: () => {
-      localStorage.setItem("commentName", name);
-      localStorage.setItem("commentEmail", email);
+      //localStorage.setItem("commentName", name);
+      //localStorage.setItem("commentEmail", email);
 
       setMessage("");
       setErrors({});

@@ -31,7 +31,7 @@ const EditPostFormContent = () => {
   const router = useRouter();
   const params = useSearchParams();
   const id = params.get("id")!;
-  const { data, isLoading } = clientApi.post.getPostById.useQuery({
+  const { data, isLoading, refetch } = clientApi.post.getPostById.useQuery({
     id: id,
   });
   const [userRole, setUserRole] = useState<string>("ADMIN");
@@ -45,6 +45,7 @@ const EditPostFormContent = () => {
         description: "Your post has been updated successfully",
         variant: "success",
       });
+      void refetch();
     },
   });
   const onSubmit = async (data: z.infer<typeof postSchema>) => {

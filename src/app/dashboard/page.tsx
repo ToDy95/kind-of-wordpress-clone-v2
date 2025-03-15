@@ -2,6 +2,7 @@ import React from "react";
 import { DashboardCard } from "@/app/_components/dashboard-card";
 import { serverApi } from "@/trpc/server";
 import { auth } from "@/server/auth";
+import { SessionProvider } from "next-auth/react";
 
 const Dashboard = async () => {
   const session = await auth();
@@ -14,11 +15,9 @@ const Dashboard = async () => {
 
   return (
     <div className="container mx-auto p-6">
-      <h1 className="mb-8 text-center text-4xl font-extrabold">
-        AICI POATE SA VINA NAVBAR
-      </h1>
-
-      <DashboardCard initialData={initialData} />
+      <SessionProvider session={session}>
+        <DashboardCard initialData={initialData} />
+      </SessionProvider>
     </div>
   );
 };
